@@ -1,0 +1,57 @@
+body{
+    background-color: black;
+    color:white;
+    font-family:'Times New Roman', Times, serif;
+}
+h1,h2,h3,h4,h5,h6{
+    color:rgba(0, 255, 255, 0.81);
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-style: italic;
+}
+.main-content{
+    margin-left:220px;
+    padding: 20px;
+}
+.sidebar{
+    background-color: rgb(184, 184, 184);
+    width: 200px;
+    height: 100%;
+    left: 0;
+    padding: 15px;
+    position: fixed;
+}
+.sidebar ul{
+    list-style: none;
+    padding: 0;
+}
+.sidebar ul li{
+    margin: 15px 0;
+}
+.sidebar ul li a{
+    color: rgb(214, 10, 180);
+    text-decoration: none;
+}
+.sidebar ul li a:hover{
+    text-decoration: underline;
+}
+.navbar{
+    padding: 10px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    color:white;
+}
+.navbar a{
+    color: white;
+}
+.navbar a:hover{
+    background-color: blueviolet;
+    border-radius: 5px;
+}
+.box-model{
+    padding: 15px;
+    background-color: lightblue;
+    border: 5px solid yellow;
+    margin: 20px;
+    color: black;
+}

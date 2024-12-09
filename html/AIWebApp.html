@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pac-Man Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: black;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    nav {
+      background-color: gray;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    nav a {
+      color: black;
+      text-decoration: none;
+      margin: 0 10px;
+      font-size: 18px;
+    }
+    nav a:hover {
+      text-decoration: underline;
+    }
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex: 1;
+    }
+    .game-container {
+      display: flex;
+      align-items: flex-start;
+    }
+    .instructions {
+      margin: 0 20px;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+    .grid-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(10, 30px);
+      grid-template-rows: repeat(10, 30px);
+      gap: 2px;
+      margin-top: 10px;
+    }
+    .cell {
+      width: 30px;
+      height: 30px;
+      background-color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .wall {
+      background-color: blue;
+    }
+    .food {
+      width: 10px;
+      height: 10px;
+      background-color: red;
+      border-radius: 50%;
+    }
+    .pacman {
+      background-color: yellow;
+      border-radius: 50%;
+    }
+    .game-over,
+    .start-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="../index.html">Professional Page</a>
+    <a href="scratch.html">From Scratch Page</a>
+    <a href="AIWebApp.html">AI Web App Page</a>
+  </nav>
+  <div class="container">
+    <div class="game-container">
+      <div class="instructions">
+        <h3>Game Instructions</h3>
+        <p>Collect as much food as possible within 30 seconds. Avoid colliding with the blue walls, or the game will end!</p>
+      </div>
+      <div class="grid-container">
+        <div class="header">
+          <div class="score">Score: 0</div>
+          <div class="timer">Time: 30s</div>
+        </div>
+        <div class="grid"></div>
+        <div class="start-screen">
+          <div>Press <b>Space Bar</b> to Start</div>
+        </div>
+        <div class="game-over" style="display: none;">
+          <div class="message"></div>
+        </div>
+      </div>
+      <div class="instructions">
+        <h3>Controls</h3>
+        <p>Use the arrow keys to move Pac-Man:</p>
+        <ul>
+          <li><b>↑</b> Move Up</li>
+          <li><b>↓</b> Move Down</li>
+          <li><b>←</b> Move Left</li>
+          <li><b>→</b> Move Right</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <script>
+    const grid = document.querySelector('.grid');
+    const scoreDisplay = document.querySelector('.score');
+    const timerDisplay = document.querySelector('.timer');
+    const startScreen = document.querySelector('.start-screen');
+    const gameOverScreen = document.querySelector('.game-over');
+    const message = document.querySelector('.game-over .message');
+    const width = 10;
+    const height = 10;
+    const cells = [];
+    let pacmanPosition = 22;
+    let score = 0;
+    let timeLeft = 30;
+    let gameInterval;
+    let gameStarted = false;
+
+    function createGrid() {
+      grid.innerHTML = ''; // Clear grid
+      cells.length = 0; // Clear cell references
+      for (let i = 0; i < width * height; i++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        grid.appendChild(cell);
+        cells.push(cell);
+      }
+    }
+
+    function generateRandomWalls() {
+      cells.forEach(cell => cell.classList.remove('wall')); // Clear existing walls
+      const wallCount = Math.floor(Math.random() * 20) + 15; // Generate 15–35 random walls
+      for (let i = 0; i < wallCount; i++) {
+        let wallIndex;
+        do {
+          wallIndex = Math.floor(Math.random() * cells.length);
+        } while (
+          wallIndex === pacmanPosition || // Avoid Pac-Man's initial position
+          cells[wallIndex].classList.contains('wall')
+        );
+        cells[wallIndex].classList.add('wall');
+      }
+    }
+
+    function addFood() {
+      cells.forEach((cell, index) => {
+        if (!cell.classList.contains('wall') && index !== pacmanPosition) {
+          const food = document.createElement('div');
+          food.classList.add('food');
+          cell.appendChild(food);
+        }
+      });
+    }
+
+    function addPacman() {
+      cells[pacmanPosition].classList.add('pacman');
+    }
+
+    function startTimer() {
+      gameInterval = setInterval(() => {
+        timeLeft--;
+        timerDisplay.textContent = `Time: ${timeLeft}s`;
+        if (timeLeft === 0) {
+          endGame('Time’s up! Game Over!');
+        }
+      }, 1000);
+    }
+
+    function endGame(messageText) {
+      clearInterval(gameInterval);
+      gameOverScreen.style.display = 'flex';
+      message.textContent = `${messageText} Your score: ${score}`;
+      document.removeEventListener('keydown', movePacman);
+    }
+
+    function movePacman(e) {
+      const oldPosition = pacmanPosition;
+
+      switch (e.key) {
+        case 'ArrowUp':
+          if (pacmanPosition - width >= 0) pacmanPosition -= width;
+          break;
+        case 'ArrowDown':
+          if (pacmanPosition + width < width * height) pacmanPosition += width;
+          break;
+        case 'ArrowLeft':
+          if (pacmanPosition % width !== 0) pacmanPosition -= 1;
+          break;
+        case 'ArrowRight':
+          if (pacmanPosition % width < width - 1) pacmanPosition += 1;
+          break;
+      }
+
+      if (cells[pacmanPosition].classList.contains('wall')) {
+        endGame('You hit a wall! Game Over!');
+        return;
+      }
+
+      cells[oldPosition].classList.remove('pacman');
+      cells[pacmanPosition].classList.add('pacman');
+
+      const currentCell = cells[pacmanPosition];
+      if (currentCell.querySelector('.food')) {
+        currentCell.querySelector('.food').remove();
+        score++;
+        scoreDisplay.textContent = `Score: ${score}`;
+      }
+    }
+
+    function startGame() {
+      gameStarted = true;
+      startScreen.style.display = 'none';
+      gameOverScreen.style.display = 'none';
+      score = 0;
+      timeLeft = 30;
+      scoreDisplay.textContent = `Score: ${score}`;
+      timerDisplay.textContent = `Time: ${timeLeft}s`;
+      createGrid();
+      generateRandomWalls();
+      addFood();
+      addPacman();
+      document.addEventListener('keydown', movePacman);
+      startTimer();
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && !gameStarted) {
+        gameStarted = true;
+        startGame();
+      } else if (e.code === 'Space' && gameOverScreen.style.display === 'flex') {
+        startGame();
+      }
+    });
+
+    createGrid();
+  </script>
+</body>
+</html>
